@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a3a2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Guia de Mesa">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Guia de Mesa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --felt:#1a3a2a;--gold:#c9a84c;--gold-light:#e8c97a;--gold-dark:#8a6a1f;
+  --parchment:#f5edd8;--pd:#e8dcc0;--ink:#2c1a0e;--inkl:#5a3e28;
+  --cream:#faf5e8;--red:#8b2020;--rbg:#fdf0f0;--rbr:#e8c0c0;
+  --abg:#fdf8e8;--abr:#e8dca0;--at:#6b4e00;
+  --bbg:#eef4ff;--bbr:#b8d0f0;--bt:#1a3a6b;
+  --gbg:#edfaf2;--gbr:#a8dfc0;--gt:#1a5c2a;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:'Crimson Pro',serif;font-size:15px;
+  background:var(--felt);color:var(--ink);
+  display:flex;flex-direction:column;
+}
+
+/* ── APP SHELL ── */
+.app{
+  display:flex;flex-direction:column;height:100%;
+  padding-top:var(--safe-top);
+}
+
+/* ── HEADER ── */
+.header{
+  background:linear-gradient(180deg,#0a1e12 0%,var(--felt) 100%);
+  border-bottom:2px solid var(--gold-dark);
+  padding:14px 16px 10px;
+  flex-shrink:0;
+}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.logo{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--gold);letter-spacing:2px;line-height:1.1;}
+.logo span{font-size:10px;display:block;color:rgba(201,168,76,.6);letter-spacing:3px;font-style:italic;font-family:'Crimson Pro',serif;}
+.search-box{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(201,168,76,.25);
+  border-radius:20px;padding:7px 12px;
+}
+.search-box input{
+  background:none;border:none;outline:none;color:var(--gold-light);
+  font-family:'Crimson Pro',serif;font-size:14px;width:100%;
+}
+.search-box input::placeholder{color:rgba(201,168,76,.4);}
+.search-icon{color:rgba(201,168,76,.5);font-size:15px;flex-shrink:0;}
+.col-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
+.col-tabs::-webkit-scrollbar{display:none;}
+.col-tab{
+  padding:5px 13px;border-radius:20px;font-family:'Cinzel',serif;font-size:10px;
+  letter-spacing:.5px;cursor:pointer;border:1.5px solid rgba(201,168,76,.25);
+  color:rgba(201,168,76,.6);background:transparent;transition:all .15s;white-space:nowrap;
+  flex-shrink:0;
+}
+.col-tab.active{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+
+/* ── GRID ── */
+.content{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch;}
+.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+.game-card{
+  background:var(--parchment);border-radius:10px;border:1.5px solid var(--gold-dark);
+  padding:14px 11px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;
+  -webkit-user-select:none;user-select:none;
+}
+.game-card:active{transform:scale(.97);border-color:var(--gold);}
+.game-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,transparent 60%);pointer-events:none;}
+.game-emoji{font-size:30px;display:block;margin-bottom:7px;}
+.game-title{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:var(--ink);line-height:1.3;margin-bottom:3px;}
+.game-meta{font-size:11px;color:var(--inkl);font-style:italic;}
+.game-badge{display:inline-block;font-size:9px;font-family:'Cinzel',serif;padding:2px 6px;border-radius:10px;margin-top:5px;background:#d4edda;color:#1a5c2a;border:1px solid #a8d5b0;}
+
+/* ── PANEL (full screen on mobile) ── */
+.panel-overlay{
+  position:fixed;inset:0;background:var(--cream);z-index:100;
+  display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+  padding-bottom:var(--safe-bottom);
+}
+.panel-overlay.open{transform:translateX(0);}
+.panel-header{
+  background:var(--pd);border-bottom:1.5px solid var(--gold-dark);
+  padding:12px 15px;padding-top:calc(12px + var(--safe-top));
+  flex-shrink:0;
+}
+.pb-btn{
+  font-size:13px;color:var(--inkl);font-style:italic;cursor:pointer;
+  display:flex;align-items:center;gap:5px;margin-bottom:8px;
+  -webkit-user-select:none;user-select:none;
+}
+.pb-btn:active{opacity:.6;}
+.ptitle{font-family:'Cinzel',serif;font-size:17px;font-weight:700;color:var(--ink);margin-bottom:2px;}
+.psub{font-size:12px;color:var(--inkl);font-style:italic;margin-bottom:9px;}
+.mode-tabs{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;}
+.mode-tabs::-webkit-scrollbar{display:none;}
+.mode-tab{
+  padding:6px 13px;border-radius:20px;font-family:'Cinzel',serif;font-size:10px;
+  letter-spacing:.5px;cursor:pointer;border:1.5px solid var(--pd);
+  color:var(--inkl);background:white;transition:all .15s;white-space:nowrap;flex-shrink:0;
+}
+.mode-tab.active{background:var(--ink);color:var(--gold);border-color:var(--ink);}
+.panel-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.goal-bar{background:var(--abg);border:1px solid var(--abr);border-radius:8px;padding:9px 13px;margin:12px 15px 0;}
+.goal-bar strong{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;color:var(--at);display:block;margin-bottom:3px;}
+.goal-bar p{font-size:13.5px;color:var(--ink);line-height:1.5;}
+.score-bar{background:var(--gbg);border:1px solid var(--gbr);border-radius:8px;padding:9px 13px;margin:8px 15px 0;}
+.score-bar strong{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;color:var(--gt);display:block;margin-bottom:6px;}
+.score-pills{display:flex;flex-wrap:wrap;gap:5px;}
+.score-pill{background:white;border:1px solid var(--gbr);border-radius:12px;padding:4px 9px;font-size:12px;color:var(--ink);display:flex;align-items:center;gap:5px;}
+.sp-val{font-family:'Cinzel',serif;font-size:10px;font-weight:600;color:var(--gt);}
+.panel-body{padding:14px 15px 24px;}
+
+/* ── FLOW ── */
+.sec-title{font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:2px;color:var(--inkl);text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:7px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--pd);}
+.check-list{margin-bottom:18px;}
+.check-item{display:flex;gap:10px;padding:8px 0;border-bottom:.5px solid var(--pd);align-items:flex-start;cursor:pointer;-webkit-user-select:none;user-select:none;}
+.check-item:last-child{border-bottom:none;}
+.check-box{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--gold-dark);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;background:white;transition:all .15s;}
+.check-box.checked{background:var(--gold-dark);}
+.check-box.checked::after{content:'✓';font-size:11px;color:white;font-weight:bold;}
+.check-text{font-size:13.5px;color:var(--ink);line-height:1.45;}
+.check-text.done{text-decoration:line-through;opacity:.5;}
+.flow-wrap{margin-bottom:18px;}
+.flow-node{background:white;border:1px solid var(--pd);border-radius:10px;padding:11px 13px;}
+.fnh{display:flex;align-items:flex-start;gap:10px;}
+.fn{width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px;}
+.fl{font-size:14px;color:var(--ink);line-height:1.5;flex:1;}
+.fl strong{font-family:'Cinzel',serif;font-size:12px;display:block;margin-bottom:2px;}
+.flow-hint{background:var(--bbg);border:1px solid var(--bbr);border-radius:6px;padding:7px 10px;margin-top:8px;font-size:12.5px;color:var(--bt);line-height:1.4;}
+.flow-warn{background:var(--rbg);border:1px solid var(--rbr);border-radius:6px;padding:7px 10px;margin-top:8px;display:flex;gap:7px;align-items:flex-start;}
+.fwd{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:5px;}
+.fwt{font-size:12.5px;color:var(--red);line-height:1.4;font-style:italic;}
+.flow-branch{margin-top:10px;padding-left:10px;border-left:2px solid var(--pd);}
+.fbt{font-size:10px;font-family:'Cinzel',serif;letter-spacing:1px;color:var(--inkl);margin-bottom:6px;}
+.flow-option{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:.5px solid var(--pd);}
+.flow-option:last-child{border-bottom:none;}
+.fot{font-family:'Cinzel',serif;font-size:10px;padding:3px 7px;border-radius:10px;background:var(--pd);color:var(--inkl);flex-shrink:0;margin-top:2px;white-space:nowrap;}
+.fox{font-size:13px;color:var(--ink);line-height:1.45;}
+.fow{font-size:12px;color:var(--red);font-style:italic;display:block;margin-top:3px;}
+.foh{font-size:12px;color:var(--bt);display:block;margin-top:3px;}
+.flow-arrow{text-align:center;color:var(--gold-dark);font-size:18px;line-height:1;margin:4px 0;}
+.flow-end{background:var(--ink);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.fei{font-size:18px;flex-shrink:0;}
+.fet{font-size:13.5px;color:var(--gold-light);line-height:1.45;}
+.fet strong{font-family:'Cinzel',serif;font-size:10px;display:block;color:var(--gold);letter-spacing:1px;margin-bottom:3px;}
+.fwb{background:var(--rbg);border:1px solid var(--rbr);border-radius:10px;padding:9px 12px;margin-bottom:5px;display:flex;gap:7px;align-items:flex-start;}
+
+/* ── PLAYER CARD ── */
+.player-card{background:white;border:1.5px solid var(--gold-dark);border-radius:10px;padding:15px;margin-bottom:16px;}
+.pct{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.pc-section{margin-bottom:11px;}
+.pc-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;color:var(--inkl);text-transform:uppercase;margin-bottom:5px;}
+.pc-item{display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:.5px solid var(--pd);font-size:13.5px;color:var(--ink);line-height:1.45;}
+.pc-item:last-child{border-bottom:none;}
+.pc-num{font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:var(--gold-dark);flex-shrink:0;width:16px;}
+.pc-rem{background:var(--abg);border:1px solid var(--abr);border-radius:6px;padding:8px 11px;font-size:12.5px;color:var(--at);line-height:1.4;margin-top:8px;}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:40px 20px;color:rgba(201,168,76,.5);}
+.empty-icon{font-size:40px;margin-bottom:10px;}
+.empty-text{font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="hrow">
+      <div class="logo">Guia de Mesa<span>referência rápida</span></div>
+    </div>
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="search" id="searchInput" placeholder="Buscar jogo..." autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div style="margin-top:8px;">
+      <div class="col-tabs" id="colTabs"></div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="game-grid" id="gameGrid"></div>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div class="panel-overlay" id="panelOverlay">
+  <div class="panel-header">
+    <div class="pb-btn" onclick="closePanel()">← voltar à coleção</div>
+    <div class="ptitle" id="panelTitle"></div>
+    <div class="psub" id="panelMeta"></div>
+    <div class="mode-tabs" id="modeTabs"></div>
+  </div>
+  <div class="panel-scroll">
+    <div class="goal-bar" id="goalBar"></div>
+    <div class="score-bar" id="scoreBar"></div>
+    <div class="panel-body" id="panelBody"></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────
+const COLS=[
+  {label:"🗂 Todos",ids:null},
+  {label:"🏝 Estratégia",ids:[1,3,4,6,7]},
+  {label:"🎉 Social",ids:[2,5,8,9,10]},
+  {label:"🧟 Temático",ids:[11]},
+];
+
+const GAMES=[
+  {id:1,name:"Abyss",players:"2–4",emoji:"🐙",
+   goal:"Acumule mais Pontos de Prestígio combinando recrutamento de Lordes, controle de Locais e gestão de Pérolas.",
+   scoring:[{l:"Lordes recrutados",v:"pontos na carta"},{l:"Locais controlados",v:"pontos + bônus"},{l:"Pérolas Negras",v:"1 pt cada"},{l:"Aliados-troféu",v:"por conjunto"}],
+   playerCard:{action:["Escolha: Explorar, Recrutar Lorde ou Controlar Local","Ao explorar: adversários podem comprar a carta por 1 Pérola antes de você","Ao recrutar: pague Aliados do símbolo correto","Ao controlar: pague Chaves dos seus Lordes"],remember:["3 Aliados iguais = 1 Pérola","Pérolas Negras são pontos — não gaste à toa","1º a controlar Local recebe bônus maior"]},
+   setup:["Separar as 5 pilhas de Aliados por localização e embaralhar cada uma","Revelar 1 Aliado em cada uma das 5 localizações","Dispor 6 Lordes na fileira de recrutamento","Posicionar Locais; revelar quantidade inicial indicada","Cada jogador: 1 Pérola Negra + recursos conforme nº de jogadores","O mais jovem começa"],
+   flow:[{t:"s",n:1,label:"<strong>Escolha UMA das 3 ações:</strong>",branch:{title:"OPÇÕES",opts:[{tag:"Explorar",text:"Vire carta do deck. Adversários podem comprá-la por 1 Pérola. Se ninguém quiser, você fica ou descarta por 1 Pérola.",warn:"3 descartes na mesma localização = 1 Aliado grátis para você.",hint:"Explore bastante no início para acumular Aliados."},{tag:"Recrutar Lorde",text:"Pague Aliados do símbolo correto. Lorde vai para sua área; novo é revelado na fileira.",warn:"Aliados de tipos diferentes não se misturam."},{tag:"Controlar Local",text:"Pague Chaves dos seus Lordes. Receba bônus imediato.",warn:"1º: bônus maior. 2º: bônus menor. 3º+: sem bônus."}]}},{t:"w",text:"3 Aliados do mesmo símbolo = 1 Pérola a qualquer momento. Não acumule Aliados inúteis."},{t:"s",n:2,label:"Passe a vez no sentido horário."},{t:"e",icon:"🏆",title:"FIM DE JOGO",text:"Quando o último Local for controlado. Some Lordes + Locais + Pérolas Negras + troféus de Aliados."}]},
+
+  {id:2,name:"Colt Express",players:"2–6",emoji:"🚂",
+   goal:"Mais dinheiro após 5 assaltos ao trem. Cada personagem tem habilidade única — conhecê-la é metade da estratégia.",
+   scoring:[{l:"Sacos de dinheiro",v:"valor impresso"},{l:"Joias",v:"valor impresso"},{l:"Bônus do personagem",v:"varia"},{l:"Mais tiros dados",v:"$1.000"}],
+   playerCard:{action:["Fase de Esquema: jogue cartas na pilha (para cima em Normal, para baixo em Túnel)","Fase de Assalto: suas ações são executadas na ordem da pilha","Ações disponíveis: mover, subir/descer teto, roubar, atirar, empurrar, ação especial"],remember:["Em Túnel: cartas viradas para baixo — ninguém vê","Levar tiro = perder carta do topo do deck para sempre","Dinheiro no chão pode ser roubado por qualquer bandido"]},
+   setup:["Montar o trem na ordem do cenário escolhido","Cada jogador escolhe personagem e pega seu deck de 10 cartas únicas","Posicionar peão no vagão indicado na ficha do personagem","Distribuir sacos e joias conforme o cenário","Colocar o Marshal na locomotiva","Montar sequência de rodadas com cartas de Assalto"],
+   flow:[{t:"s",n:1,label:"<strong>Fase de Esquema</strong> — Vire a carta de Assalto. Define tipo de rodada e quantas ações cada jogador joga.",branch:{title:"TIPOS DE RODADA",opts:[{tag:"Normal",text:"Cartas viradas para CIMA. Todo mundo vê o que os outros jogam.",hint:"Adapte sua estratégia vendo o que os outros jogam antes de você."},{tag:"Túnel/Telegrama",text:"Cartas viradas para BAIXO. Ninguém vê até a resolução.",warn:"Planeje com base nas posições atuais, não em expectativas."},{tag:"Duplicada",text:"Cada jogador joga 2 cartas nesta rodada."}]}},{t:"s",n:2,label:"<strong>Fase de Assalto</strong> — Resolva cada carta na ordem em que foi jogada.",warn:"Irrevogável — o que você planejou na Esquema acontece aqui."},{t:"s",n:3,label:"Marshal move-se em direção a tiros. Bandidos no mesmo vagão levam 1 tiro.",warn:"Tiro = descartar carta do TOPO do deck para o chão. Permanente."},{t:"s",n:4,label:"Compre cartas até completar a mão para a próxima rodada.",warn:"Cartas no chão por tiros são perdidas permanentemente."},{t:"e",icon:"💰",title:"FIM — 5 RODADAS",text:"Some sacos e joias. Maior total vence. Empate: quem deu mais tiros (+ $1.000)."}]},
+
+  {id:3,name:"Ticket to Ride",players:"2–5",emoji:"🚃",
+   goal:"Mais pontos construindo rotas e completando Destinos. Destinos não cumpridos subtraem pontos.",
+   scoring:[{l:"Rotas construídas",v:"1–15 pts"},{l:"Destinos completos",v:"+ pts indicados"},{l:"Destinos incompletos",v:"− pts indicados"},{l:"Rota mais longa",v:"+10 pts"}],
+   playerCard:{action:["UMA ação: comprar 2 cartas, construir rota, ou pegar 3 Destinos (devolva ao menos 1)","Locomotiva visível = só 1 carta nesse turno","Rotas cinzas: qualquer cor, mas todas iguais entre si"],remember:["Quando alguém ficar com ≤2 trens: todos têm mais 1 turno, depois acaba","Destinos não completados subtraem pontos","Rota mais longa: +10 pts para 1 jogador"]},
+   setup:["Espalhar mapa; separar 45 trens de cada jogador por cor","Distribuir 4 cartas de vagão; revelar 5 na área visível","Distribuir 3 Destinos a cada jogador; manter ao menos 1, devolver o resto","Destinos são secretos até a contagem final","O mais viajado (ou sorteado) começa"],
+   flow:[{t:"s",n:1,label:"<strong>Faça UMA das três ações:</strong>",branch:{title:"OPÇÕES",opts:[{tag:"Comprar cartas",text:"2 cartas da área visível ou do deck. Locomotiva visível = só 1 carta no turno.",hint:"Guarde locomotivas para rotas de 5–6 vagões."},{tag:"Construir rota",text:"Pague cartas da cor e quantidade exata; coloque seus trens. Rotas cinzas: qualquer cor uniforme.",warn:"Rotas duplas com 3+ jogadores: cada lado pertence a um jogador diferente.",hint:"Complete Destinos antes de bloquear adversários."},{tag:"Pegar Destinos",text:"Compre 3; fique com ao menos 1. Completos somam, incompletos subtraem.",warn:"Não pegue mais do que consegue cumprir com os trens restantes."}]}},{t:"s",n:2,label:"Passe a vez. Com <strong>≤2 trens</strong>: todos têm mais 1 turno, depois acaba.",warn:"Bloqueio pode transformar seu Destino em penalidade."},{t:"e",icon:"🚉",title:"CONTAGEM FINAL",text:"Revele Destinos. Some rotas + completos − incompletos. Maior rota contínua = +10 pts. Maior total vence."}]},
+
+  {id:4,name:"Terraforming Mars",players:"1–5",emoji:"🔴",
+   goal:"Mais Pontos de Vitória ao final. Vêm do TR, Florestas, Cidades e cartas. Termina quando os 3 parâmetros globais completarem.",
+   scoring:[{l:"TR",v:"1 pt cada"},{l:"Florestas",v:"1 pt cada"},{l:"Cidades",v:"1 pt/floresta adj."},{l:"Cartas com pontos",v:"valor na carta"},{l:"Marcos",v:"5 pts cada"},{l:"Prêmios",v:"5/3/1 pts"}],
+   playerCard:{action:["Pesquisa: compre 4 cartas, pague 3 MC por cada que guardar","Ação: 1–2 ações por vez ou passe. Jogar carta, ação de carta, 8 plantas→Floresta, 8 calor→Temperatura, Marco, Prêmio","Produção: MC = TR + produção. Energia não usada vira Calor."],remember:["TR sobe a cada parâmetro global aumentado — é renda E pontos","Florestas adjacentes a Cidades multiplicam pontos","Marcos: só 3 no jogo todo — reivindique cedo"]},
+   setup:["Montar tabuleiro de Marte e tabuleiro individual de cada jogador","Marcadores: Temperatura −30°C, Oxigênio 0%, Oceanos 0","Marcador de TR em 20 para cada jogador","Distribuir 2 Corporações; escolher 1 em segredo","10 cartas por jogador; cada carta guardada custa 3 MC","Revelar corporações simultaneamente; receber recursos e produções iniciais"],
+   flow:[{t:"s",n:1,label:"<strong>Fase de Pesquisa</strong> — Compre 4 cartas. Pague 3 MC por cada que guardar. Descarte de graça as demais.",hint:"Guarde só cartas jogáveis nesta geração ou com sinergia com sua Corporação."},{t:"s",n:2,label:"<strong>Fase de Ação</strong> — 1–2 ações por vez ou passe. Termina quando todos passarem.",branch:{title:"AÇÕES",opts:[{tag:"Jogar carta",text:"Pague MC. Verifique requisitos de parâmetros globais. Aplique efeito.",warn:"Requisitos não cumpridos = não pode jogar a carta.",hint:"Cartas de produção valem mais no início; de pontos valem mais no fim."},{tag:"Ação de carta",text:"Cartas com → têm ação ativável 1× por geração. Marque com cubo após usar.",hint:"São gratuitas — use todas que puder a cada geração."},{tag:"Converter plantas",text:"8 plantas → Floresta no tabuleiro + Oxigênio +1% + TR +1.",warn:"Posicione florestas adjacentes às suas Cidades para multiplicar pontos."},{tag:"Converter calor",text:"8 Calor → Temperatura +2°C + TR +1."},{tag:"Marco / Prêmio",text:"Marco: 8 MC, 5 pts, máx 3 por jogo. Prêmio: 8/14/20 MC.",warn:"Reivindique Marcos cedo se já cumpre o critério."}]}},{t:"s",n:3,label:"<strong>Fase de Produção</strong> — Todos produzem simultaneamente. MC = TR + produção. Energia vira Calor.",warn:"TR sobe a cada parâmetro global aumentado — é renda futura E pontos de vitória."},{t:"e",icon:"🌍",title:"FIM — 3 PARÂMETROS COMPLETOS",text:"Temperatura +8°C, Oxigênio 14%, 9 Oceanos colocados. Some TR + Florestas + Cidades + cartas + Marcos/Prêmios."}]},
+
+  {id:5,name:"Camel Up",players:"3–8",emoji:"🐪",
+   goal:"Fazer as apostas certas sobre qual camelo lidera cada etapa e a corrida completa. Quem tiver mais libras ao final vence.",
+   scoring:[{l:"Apostas de etapa corretas",v:"1–5 libras"},{l:"Apostas de etapa erradas",v:"−1 libra"},{l:"Aposta de corrida correta",v:"bônus por ordem"},{l:"Oásis/Deserto",v:"1 libra por camelo"}],
+   playerCard:{action:["UMA ação: Sacar dado da pirâmide, Apostar em etapa, Colocar Oásis/Deserto, ou Apostar no vencedor/perdedor da corrida","Sacar dado: role, mova o camelo sorteado, ganhe 1 libra","Apostar etapa: pegue ficha do camelo que acha que lidera ao fim da etapa"],remember:["Camelo no TOPO da pilha é quem está na frente — não confunda com quem está embaixo","Oásis e Deserto não podem ser adjacentes a outras fichas","Etapa termina quando os 5 dados forem sacados; resolva apostas e reponha pirâmide"]},
+   setup:["Montar a pista circular ou linear indicada na caixa","Posicionar 5 camelos na largada — posição inicial por saque de dados","Colocar os 5 dados coloridos na pirâmide e fechar","Distribuir fichas de aposta (valores 5/3/2/2/2) e 3 libras a cada jogador","1 ficha de Deserto e 1 de Oásis para cada jogador","O mais animado com camelos começa"],
+   flow:[{t:"s",n:1,label:"<strong>Escolha UMA ação:</strong>",branch:{title:"OPÇÕES",opts:[{tag:"Sacar dado",text:"Abra a pirâmide: dado aleatório sai. Mova o camelo daquela cor. Ganhe 1 libra.",warn:"Camelo em pilha: move e carrega todos que estão SOBRE ele.",hint:"Ação segura — garante 1 libra e avança o jogo."},{tag:"Apostar etapa",text:"Pegue ficha do topo do camelo que acha que lidera ao fim da etapa. Mais cedo = maior prêmio (5 libras), mais risco.",warn:"Errar custa 1 libra. Fichas de 2 libras são mais seguras.",hint:"Aposte no camelo que está atrás mas com poucos dados sacados."},{tag:"Colocar ficha",text:"Coloque Oásis (+1 casa) ou Deserto (−1 casa) em casa vazia não adjacente a outra ficha. Ganhe 1 libra a cada camelo que parar ali.",warn:"Não pode colocar na largada nem adjacente a outra ficha."},{tag:"Apostar corrida",text:"Coloque carta virada para baixo na pilha de 1º ou último lugar. Cedo = mais prêmio; erro = −1 libra.",hint:"Aposte cedo no favorito e tarde no azarão."}]}},{t:"s",n:2,label:"<strong>Etapa termina</strong> quando os 5 dados forem sacados. Resolva apostas de etapa; reponha pirâmide.",warn:"Apostas resolvidas em ordem decrescente de valor: 5 → 3 → 2 → 2 → 2."},{t:"e",icon:"🏁",title:"FIM DE CORRIDA",text:"Camelo cruza a linha → termine a etapa → resolva apostas de corrida (1º e último). Mais libras vence."}]},
+
+  {id:6,name:"Kingsburg",players:"2–5",emoji:"🏰",
+   goal:"Construir o maior reino ao longo de 5 anos. Mais Pontos de Vitória ao final vence. Pontos vêm de construções e bônus de fim de ano.",
+   scoring:[{l:"Construções",v:"1–4 pts cada"},{l:"Bônus de fim de ano",v:"variável"},{l:"Vitória militar",v:"pts por vitória"},{l:"Cartas de Destino",v:"pts por objetivo"}],
+   playerCard:{action:["Role 3 dados. Em ordem crescente de total, aloque dados em Conselheiros (soma dos dados = número do Conselheiro)","Receba bônus do Conselheiro: recursos, soldados, PV ou outros efeitos","Construa 1 melhoria na sua cidade gastando recursos","No inverno: enfrente o inimigo com soldados ou perca construções"],remember:["Menor total de dados joga primeiro — prioridade nos melhores Conselheiros","Mais de 1 dado pode ativar um Conselheiro (ex: 2+3=5)","Construções de recursos têm efeito composto — priorize no início"]},
+   setup:["Montar tabuleiro central com 18 Conselheiros e tabuleiro individual de cada jogador","3 dados por jogador + 1 ficha de Influência cada","Marcadores de recursos em 0 para cada jogador","Posicionar marcador de ano em 1 (de 5 anos no total)","Sortear quem começa"],
+   flow:[{t:"s",n:1,label:"<strong>Primavera, Verão e Outono</strong> (3 estações produtivas por ano):",branch:{title:"FASES DA ESTAÇÃO",opts:[{tag:"1. Rolar dados",text:"Cada jogador rola 3 dados. Menor total começa.",warn:"Use Influência para +1 ou −1 em qualquer dado (1× por rodada).",hint:"Dados baixos têm prioridade — Conselheiros menores garantidos valem mais do que arriscar nos altos."},{tag:"2. Alocar dados",text:"Em ordem crescente de total, aloque dados em Conselheiro disponível (soma = número). Receba bônus imediatamente.",warn:"Conselheiro ocupado não pode ser ativado por outro jogador na mesma estação."},{tag:"3. Construir",text:"Gaste recursos para construir 1 melhoria. Efeitos são permanentes e cumulativos.",hint:"Priorize construções de recursos nos primeiros anos — efeito composto ao longo de 5 anos."}]}},{t:"s",n:2,label:"<strong>Inverno</strong> — Rei rola 3 dados: esse é o valor do inimigo que ataca todos. Enfrente com seus soldados.",warn:"Força descoberta = perda de 1 construção por ponto. Construa soldados no outono."},{t:"s",n:3,label:"Fim do ano: receba bônus por número de construções. Avance o marcador de ano.",hint:"Anos 3 e 5 têm inimigos mais fortes — garanta soldados nesses anos."},{t:"e",icon:"👑",title:"FIM — APÓS 5 ANOS",text:"Some pontos de todas as construções + bônus acumulados + pontos de Destino. Maior total vence."}]},
+
+  {id:7,name:"7 Wonders",players:"2–7",emoji:"🏛️",
+   goal:"Civilização com mais Pontos de Vitória após 3 eras de draft. Pontos vêm de várias fontes — diversificar é essencial.",
+   scoring:[{l:"Estruturas civis (azul)",v:"pts fixos"},{l:"Militar",v:"1/3/5 pts por era"},{l:"Derrota militar",v:"−1 pt por era"},{l:"Moedas",v:"1 pt por 3 moedas"},{l:"Pesquisa (verde)",v:"conjuntos e pares"},{l:"Guildas (roxas)",v:"pts por vizinhos"},{l:"Maravilha",v:"pts por estágio"}],
+   playerCard:{action:["Receba 7 cartas. Escolha 1; passe o resto para o vizinho (Era I→esquerda; II→direita; III→esquerda)","Com a carta: construa (pague recursos), descarte por 3 moedas, ou avance estágio da Maravilha","Repita até 6 jogadas (7ª descartada automaticamente)"],remember:["Compre recursos dos vizinhos por 2 moedas (ou 1 com estrutura comercial)","Símbolos de corrente permitem construir de graça — leia os ícones nas cartas","Ignorar militar 3 eras = até 9 pts negativos por vizinho"]},
+   setup:["Distribuir 1 Maravilha aleatória a cada jogador (lado A para iniciantes)","Cada jogador: 3 moedas + recursos iniciais da Maravilha","Separar cartas por era; Guildas (roxas) só na era III","Distribuir 7 cartas da era I a cada jogador","Posicionar fichas de conflito militar; sortear quem começa"],
+   flow:[{t:"s",n:1,label:"<strong>Cada era: 6 rodadas de draft</strong>",branch:{title:"SEQUÊNCIA",opts:[{tag:"1. Escolher",text:"Escolha 1 carta em segredo; coloque virada para baixo.",hint:"Observe o que os vizinhos precisam — às vezes descartar uma boa carta vale mais."},{tag:"2. Revelar",text:"Todos revelam simultaneamente. Execute: construir, descartar por 3 moedas, ou avançar Maravilha.",warn:"Sem recursos: compre dos vizinhos (2 moedas cada) ou descarte a carta."},{tag:"3. Passar",text:"Passe as cartas restantes para o vizinho. Era I: esquerda; II: direita; III: esquerda.",hint:"Fique de olho no que está passando — não alimente a estratégia do vizinho."}]}},{t:"s",n:2,label:"<strong>Conflito Militar</strong> ao fim de cada era — compare Escudos com cada vizinho.",warn:"Derrota = −1 pt por era. 3 eras = até 9 pts negativos por vizinho."},{t:"e",icon:"🏛️",title:"FIM — APÓS 3 ERAS",text:"Some: civis + militar + moedas(÷3) + pesquisa + comercial + guildas + Maravilha. Use a tabela da caixa para não errar."}]},
+
+  {id:8,name:"Coup",players:"2–6",emoji:"🎭",
+   goal:"Último jogador com pelo menos 1 carta na mão. Elimine adversários executando ações e blefando sobre seus personagens.",
+   scoring:[{l:"Último com carta na mão",v:"vence"},{l:"Sem cartas",v:"eliminado"}],
+   playerCard:{action:["Declare 1 ação (pode blefar sobre qual personagem você tem)","Outros podem contestar (duvidar) ou contra-agir (bloquear) antes da execução","Se sem reação: execute a ação","Com 10+ moedas: OBRIGADO a dar Golpe de Estado"],remember:["Renda=1 MC (inbloqueável); Taxa Estrangeira=2 MC (requer Duque)","Golpe de Estado (7 MC) não pode ser bloqueado nem contestado","Personagens: Duque (taxa), Assassino (elimina), Capitão (rouba), Condessa (bloqueia assassinato), Embaixador (troca cartas)"]},
+   setup:["Embaralhar 15 cartas: 3 de cada (Duque, Assassino, Capitão, Condessa, Embaixador)","2 cartas viradas para baixo a cada jogador — olhe em segredo","2 moedas para cada jogador","O mais suspeito começa"],
+   flow:[{t:"s",n:1,label:"<strong>Declare sua ação</strong> — pode blefar sobre qual personagem você tem.",branch:{title:"AÇÕES",opts:[{tag:"Renda",text:"Pegue 1 moeda. Inbloqueável e incontestável.",hint:"Ação segura quando precisa de moedas sem arriscar blefe."},{tag:"Taxa Estrangeira",text:"Pegue 2 moedas (requer Duque ou blefe).",warn:"Blefar como Duque é o mais comum — todos vão contestar se ficar suspeito."},{tag:"Assassinar",text:"Pague 3 MC → elimine 1 influência adversária (requer Assassino). Bloqueável pela Condessa.",warn:"Se bloqueado ou contestado com sucesso, você perde as 3 moedas mesmo assim."},{tag:"Roubar",text:"Pegue 2 moedas de adversário (requer Capitão). Bloqueável por Capitão ou Embaixador."},{tag:"Trocar cartas",text:"Pegue 2 do deck, escolha quais guardar, devolva o resto (requer Embaixador).",hint:"Útil para renovar a mão após perder uma influência."},{tag:"Golpe de Estado",text:"Pague 7 MC → elimine 1 influência. Inbloqueável e incontestável.",warn:"Com 10+ moedas você É OBRIGADO a dar Golpe de Estado."}]}},{t:"s",n:2,label:"<strong>Outros podem reagir antes da execução:</strong>",branch:{title:"REAÇÕES",opts:[{tag:"Contestar",text:"'Você não tem esse personagem!' Acertou: ativo perde influência. Errou: você perde.",warn:"Arriscado — use quando tiver evidências concretas."},{tag:"Contra-agir",text:"Declare o personagem que bloqueia. Também pode ser contestado.",hint:"Condessa bloqueia assassinato; Capitão/Embaixador bloqueiam roubo; Duque bloqueia Taxa."}]}},{t:"e",icon:"🎭",title:"FIM DE JOGO",text:"Sem cartas = eliminado. Último com ao menos 1 carta vence."}]},
+
+  {id:9,name:"Quest",players:"3–5",emoji:"⚔️",
+   goal:"Depende do lado secreto. Leais: completar 3 Quests sem que Merlim seja revelado. Servos: sabotam 3 Quests OU revelam Merlim no fim.",
+   scoring:[{l:"Leais: 3 quests completas",v:"vitória (se Merlim não for revelado)"},{l:"Servos: 3 quests falhadas",v:"vitória imediata"},{l:"Servos revelam Merlim",v:"vitória mesmo com 3 completas"}],
+   playerCard:{action:["Líder indica N jogadores para a Quest (N varia por rodada — ver tabuleiro)","Todos votam simultaneamente: Aprovar ou Rejeitar a equipe","Se aprovada: escolhidos jogam Sucesso ou Fracasso em segredo","Se rejeitada 5× seguidas: Servos vencem automaticamente","Revele cartas: 1 Fracasso = Quest falhada (exceto onde precisa de 2)"],remember:["Servos: não jogue Fracasso toda vez — seja sutil","Merlim: aja naturalmente — revelar demais é perigoso","Após 3 quests completas: Servos tentam apontar quem é Merlim"]},
+   setup:["Selecionar cartas de personagem conforme tabela de jogadores (ver manual)","1 carta por jogador em segredo","Revelação noturna: todos fecham os olhos; Servos se revelam entre si; Merlim vê os Servos","Sortear o primeiro Líder"],
+   flow:[{t:"s",n:1,label:"<strong>Líder propõe equipe</strong> — indica N jogadores (N no tabuleiro por rodada).",hint:"Leais: coloque jogadores confiáveis. Servos: tente entrar para sabotar."},{t:"s",n:2,label:"<strong>Votação simultânea</strong> — Maioria aprova ou rejeita.",warn:"5 rejeições seguidas = Servos vencem automaticamente. Use rejeições com parcimônia."},{t:"s",n:3,label:"<strong>Missão</strong> — Escolhidos jogam carta em segredo. Embaralhar e revelar.",branch:{title:"RESULTADO",opts:[{tag:"Sucesso",text:"Todos jogaram Sucesso — Quest completa. Leais marcam 1 ponto.",hint:"Leais: jogue SEMPRE Sucesso. Um Fracasso entrega quem é Servo."},{tag:"Fracasso",text:"Ao menos 1 Fracasso — Quest falhada. Servos marcam 1 ponto.",warn:"Servos: não sabotem toda vez — seja sutil ou será identificado."}]}},{t:"s",n:4,label:"Passe marcador de Líder para a esquerda. Nova rodada."},{t:"e",icon:"⚔️",title:"FIM DE JOGO",text:"3 quests completas → Leais vencem, a menos que Servos revelem Merlim. 3 quests falhadas → Servos vencem imediatamente."}]},
+
+  {id:10,name:"Piratas",players:"3–5",emoji:"🏴‍☠️",
+   goal:"Acumular mais tesouros ao fim das rodadas. Alianças são temporárias — o objetivo final é sempre individual.",
+   scoring:[{l:"Moedas de ouro",v:"1 pt cada"},{l:"Bônus de cartas especiais",v:"variável"},{l:"Penalidades por traição",v:"depende da variante"}],
+   playerCard:{action:["Mova seu navio até o número de casas da tripulação atual","Ação no local: coletar tesouro, combater, comerciar ou recrutar em Porto","Gerencie sua tripulação — piratas perdidos em combate não voltam"],remember:["Alianças são temporárias — o objetivo final é individual","Reposição de tripulação só em Portos específicos","Combate: compare forças + cartas; quem perder descarta tripulação"]},
+   setup:["Montar tabuleiro com ilhas e rotas marítimas","Cada jogador: 1 navio, tripulação inicial e 2 cartas de ação","Posicionar tesouros nas ilhas conforme o cenário","Distribuir moedas iniciais","O pirata com mais bigode começa"],
+   flow:[{t:"s",n:1,label:"<strong>Mova seu navio</strong> — até o número de casas da tripulação atual.",hint:"Fique perto de tesouros não protegidos no início — acumular cedo dá vantagem."},{t:"s",n:2,label:"<strong>Ação no local atual:</strong>",branch:{title:"LOCAIS",opts:[{tag:"Ilha com tesouro",text:"Colete se não protegido, ou enfrente o guardião em combate.",hint:"Tesouros em ilhas menos visitadas acumulam mais valor."},{tag:"Navio inimigo",text:"Combate: compare força total (tripulação + cartas). Vencedor saqueia o perdedor.",warn:"Calcule se o butim vale a perda de tripulação."},{tag:"Porto",text:"Reponha tripulação, compre cartas, venda tesouros ou repare o navio."}]}},{t:"s",n:3,label:"Passe a vez. Ao final de todas as rodadas, some os tesouros.",warn:"Não gaste tripulação desnecessariamente — reposição é cara e lenta."},{t:"e",icon:"🏴‍☠️",title:"FIM DE JOGO",text:"Após as rodadas do cenário, some todo o ouro e tesouros de cada jogador. Maior total vence."}]},
+
+  {id:11,name:"Zombicide: BP",players:"1–6",emoji:"🧟",
+   goal:"Cooperativo — todos vencem ou perdem juntos. Completem o objetivo da missão antes que os zumbis sobrecarreguem os sobreviventes.",
+   scoring:[{l:"Todos os objetivos completos",v:"vitória"},{l:"Qualquer sobrevivente eliminado",v:"derrota (maioria das missões)"}],
+   playerCard:{action:["Fase Sobreviventes: cada um executa até 3 ações (mover, atacar, abrir porta, procurar, organizar inventário)","Fase Zumbis: zumbis na mesma zona atacam; demais caminham para linha de visão ou maior barulho","Fase Spawn: cada portão ativo gera novos zumbis conforme carta de spawn"],remember:["Abrir porta = revelar zumbis novos — esteja preparado antes de abrir","Atirar gera barulho e atrai zumbis; corpo-a-corpo é silencioso","Ferimento = descartar 1 equipamento. Sem equipamento = eliminado","Abominadores precisam de 3+ de dano em 1 único ataque para morrer"]},
+   setup:["Montar mapa da missão conforme o livro de missões","Posicionar zumbis e tokens de objetivo nas posições indicadas","Cada jogador escolhe Sobrevivente e recebe tabuleiro individual","Distribuir equipamentos iniciais indicados na missão","Embaralhar deck de Equipamentos e deck de Spawn separadamente","Posicionar todos na área de largada indicada no mapa"],
+   flow:[{t:"s",n:1,label:"<strong>Fase dos Sobreviventes</strong> — Cada um executa até 3 ações:",branch:{title:"AÇÕES (1 ação cada)",opts:[{tag:"Mover",text:"Mova para zona adjacente. Zonas com zumbis custam 1 ação para entrar.",warn:"Entrar em zona com zumbi = ser atacado no final do turno se não os matar antes de sair."},{tag:"Atacar",text:"Role dados da arma; cada resultado ≥ precisão = 1 zumbi morto.",warn:"Armas de área atingem aliados na mesma zona — fogo amigo é real.",hint:"Corpo-a-corpo não gera barulho; armas de fogo geram token de barulho."},{tag:"Abrir porta",text:"Revele sala adjacente; role spawn imediatamente.",warn:"Pode revelar dezenas de zumbis de uma vez — certifique-se de ter ações de ataque disponíveis."},{tag:"Procurar",text:"Compre 1 carta de Equipamento. Só funciona em zonas internas sem zumbis.",hint:"Procure cedo — o deck vai secando ao longo da missão."},{tag:"Organizar",text:"Troque equipamentos com aliado na mesma zona ou reorganize seu inventário (2 mãos + mochila)."}]}},{t:"s",n:2,label:"<strong>Fase dos Zumbis</strong> — Atacam na mesma zona; demais caminham para linha de visão ou maior barulho.",warn:"Ferimento = descartar 1 equipamento. Sem equipamento = sobrevivente eliminado (derrota na maioria das missões)."},{t:"s",n:3,label:"<strong>Fase de Spawn</strong> — 1 carta por portão ativo. Coloque os zumbis indicados.",warn:"Mais portões ativos = mais zumbis por rodada. Destruir portões reduz o fluxo de zumbis."},{t:"e",icon:"🧟",title:"VITÓRIA OU DERROTA",text:"Vitória: todos os objetivos da missão completos. Derrota: qualquer sobrevivente eliminado, ou zumbis incontroláveis conforme as regras da missão."}]},
+];
+
+// ── STATE ──
+let curGame=null, curMode='normal', curCol=0, searchQ='';
+
+// ── RENDER GRID ──
+function renderColTabs(){
+  document.getElementById('colTabs').innerHTML=COLS.map((c,i)=>
+    `<button class="col-tab ${curCol===i?'active':''}" onclick="setCol(${i})">${c.label}</button>`
+  ).join('');
+}
+function setCol(i){curCol=i;searchQ='';document.getElementById('searchInput').value='';renderColTabs();renderGrid();}
+
+function renderGrid(){
+  const grid=document.getElementById('gameGrid');
+  const ids=COLS[curCol].ids;
+  let list=ids?GAMES.filter(g=>ids.includes(g.id)):GAMES;
+  if(searchQ){
+    const q=searchQ.toLowerCase();
+    list=list.filter(g=>g.name.toLowerCase().includes(q));
+  }
+  if(!list.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-text">Nenhum jogo encontrado</div></div>`;
+    return;
+  }
+  grid.innerHTML=list.map(game=>`
+    <div class="game-card" onclick="openPanel(${game.id})">
+      <span class="game-emoji">${game.emoji}</span>
+      <div class="game-title">${game.name}</div>
+      <div class="game-meta">${game.players} jog.</div>
+      <span class="game-badge">✓ ficha pronta</span>
+    </div>`).join('');
+}
+
+// ── PANEL ──
+function openPanel(id){
+  curGame=id; curMode='normal';
+  const g=GAMES.find(x=>x.id===id);
+  document.getElementById('panelTitle').textContent=`${g.emoji} ${g.name}`;
+  document.getElementById('panelMeta').textContent=`${g.players} jogadores`;
+  renderModeTabs();
+  document.getElementById('goalBar').innerHTML=`<strong>🎯 OBJETIVO</strong><p>${g.goal}</p>`;
+  document.getElementById('scoreBar').innerHTML=`<strong>🏅 PONTUAÇÃO</strong><div class="score-pills">${g.scoring.map(s=>`<div class="score-pill"><span>${s.l}</span><span class="sp-val">${s.v}</span></div>`).join('')}</div>`;
+  renderBody();
+  document.getElementById('panelOverlay').classList.add('open');
+  document.getElementById('panelOverlay').querySelector('.panel-scroll').scrollTop=0;
+}
+function closePanel(){
+  document.getElementById('panelOverlay').classList.remove('open');
+  curGame=null;
+}
+function renderModeTabs(){
+  document.getElementById('modeTabs').innerHTML=[
+    {k:'normal',l:'📋 Ficha'},{k:'newbie',l:'🎓 Primeira partida'},{k:'player',l:'🃏 Meu turno'}
+  ].map(m=>`<button class="mode-tab ${curMode===m.k?'active':''}" onclick="setMode('${m.k}')">${m.l}</button>`).join('');
+}
+function setMode(m){curMode=m;renderModeTabs();renderBody();document.getElementById('panelOverlay').querySelector('.panel-scroll').scrollTop=0;}
+
+// ── FLOW BUILDER ──
+function buildFlow(flow,hints){
+  let h='',sc=0;
+  const steps=flow.filter(n=>n.t==='s');
+  flow.forEach(node=>{
+    if(node.t==='s'){
+      sc++;
+      h+=`<div class="flow-node"><div class="fnh"><div class="fn">${node.n}</div><div class="fl">${node.label}</div></div>`;
+      if(node.warn)h+=`<div class="flow-warn"><div class="fwd"></div><div class="fwt">${node.warn}</div></div>`;
+      if(node.hint&&hints)h+=`<div class="flow-hint">🎓 ${node.hint}</div>`;
+      if(node.branch){
+        h+=`<div class="flow-branch"><div class="fbt">${node.branch.title}</div>`;
+        node.branch.opts.forEach(o=>{
+          h+=`<div class="flow-option"><span class="fot">${o.tag}</span><div class="fox">${o.text}`;
+          if(o.warn)h+=`<span class="fow">⚠ ${o.warn}</span>`;
+          if(o.hint&&hints)h+=`<span class="foh">🎓 ${o.hint}</span>`;
+          h+=`</div></div>`;
+        });
+        h+=`</div>`;
+      }
+      h+=`</div>`;
+      if(sc<steps.length||flow.find(n=>n.t==='e'))h+=`<div class="flow-arrow">↓</div>`;
+    } else if(node.t==='w'){
+      h+=`<div class="fwb"><div class="fwd"></div><div class="fwt">${node.text}</div></div><div class="flow-arrow">↓</div>`;
+    } else if(node.t==='e'){
+      h+=`<div class="flow-end"><div class="fei">${node.icon}</div><div class="fet"><strong>${node.title}</strong>${node.text}</div></div>`;
+    }
+  });
+  return h;
+}
+
+function renderBody(){
+  const g=GAMES.find(x=>x.id===curGame);if(!g)return;
+  if(curMode==='player'){
+    let h=`<div class="sec-title">Cartão do jogador</div><div class="player-card"><div class="pct"><span>${g.emoji}</span>${g.name} — O que fazer no meu turno</div>`;
+    h+=`<div class="pc-section"><div class="pc-label">Ações</div>`;
+    g.playerCard.action.forEach((a,i)=>{h+=`<div class="pc-item"><div class="pc-num">${i+1}</div><div>${a}</div></div>`;});
+    h+=`</div><div class="pc-section"><div class="pc-label">Não esqueça</div>`;
+    g.playerCard.remember.forEach(r=>{h+=`<div class="pc-item"><div class="pc-num">⚠</div><div>${r}</div></div>`;});
+    h+=`</div><div class="pc-rem">💡 Dúvida em algum termo? Veja a aba Ficha.</div></div>`;
+    document.getElementById('panelBody').innerHTML=h;return;
+  }
+  const hints=curMode==='newbie';
+  let h=`<div class="sec-title">Preparação</div><div class="check-list">`;
+  g.setup.forEach(s=>{h+=`<div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">${s}</div></div>`;});
+  h+=`</div><div class="sec-title">Como jogar</div><div class="flow-wrap">${buildFlow(g.flow,hints)}</div>`;
+  document.getElementById('panelBody').innerHTML=h;
+}
+
+function toggleCheck(el){
+  el.querySelector('.check-box').classList.toggle('checked');
+  el.querySelector('.check-text').classList.toggle('done');
+}
+
+// ── SEARCH ──
+document.getElementById('searchInput').addEventListener('input',function(){
+  searchQ=this.value.trim();
+  renderGrid();
+});
+
+// ── SWIPE TO CLOSE PANEL ──
+let touchStartX=0;
+document.getElementById('panelOverlay').addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;},{passive:true});
+document.getElementById('panelOverlay').addEventListener('touchend',e=>{
+  if(e.changedTouches[0].clientX - touchStartX > 80) closePanel();
+},{passive:true});
+
+// ── BACK BUTTON (Android) ──
+window.addEventListener('popstate',()=>{
+  if(curGame!==null){closePanel();history.pushState(null,'','');}
+});
+history.pushState(null,'','');
+
+// ── SERVICE WORKER ──
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+
+// ── INIT ──
+renderColTabs();
+renderGrid();
+</script>
+</body>
+</html>
